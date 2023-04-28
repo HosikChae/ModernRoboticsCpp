@@ -10,7 +10,8 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_STANDARD 11)
 
-
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 find_package (Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
@@ -102,6 +103,7 @@ endif()
 # --------------------------------------------------------------
 option(PYTHON_BINDER "generate python binder" OFF)
 if(PYTHON_BIND)
+  message(STATUS "    -- Configuring python bind ...")
   # Dependencies
   ## Python3 and Virtualenv
   set(Python_FIND_VIRTUALENV FIRST)
@@ -146,7 +148,10 @@ endif()
 # --------------------------------------------------------------
 option(DOUBLE_PRECISION "use `double` instead of `float`" OFF)
 if(DOUBLE_PRECISION)
+  message(STATUS "    -- Double precision configured (will use MatrixXd, VectorXd)")
   ADD_DEFINITIONS( -D_DOUBLE_PRECISION=1)
+else()
+  message(STATUS "    -- Single Precision configured (will use MatrixXf, VectorXf)")
 endif()
 add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
 
