@@ -53,6 +53,7 @@ endif()
 include_directories(include
                     ${EIGEN3_INCLUDE_DIRS})
 
+# --------------------------------------------------------------
 # Test (optional)
 option(ENABLE_TEST "enable testing of library" OFF)
 
@@ -98,9 +99,54 @@ target_link_libraries( lib_test ModernRoboticsCpp gtest_main)
 
 endif()
 
+# --------------------------------------------------------------
+option(PYTHON_BINDER "generate python binder" OFF)
+if(PYTHON_BIND)
+  # Dependencies
+  ## Python3 and Virtualenv
+  set(Python_FIND_VIRTUALENV FIRST)
+  find_package(Python3 COMPONENTS Interpreter Development)
+  set(pybind11_DIR ${Python3_SITELIB}/pybind11/share/cmake/pybind11) # Hint (initial guess to the config files.)
+
+  ## pybind11
+  find_package(pybind11 REQUIRED)
+  if(NOT EXISTS ${pybind11_INCLUDE_DIR}/pybind11/pybind11.h)
+    message(WARNING "pybind11 not exists in the path that CMake found.")
+
+    set(pybind11_INCLUDE_DIR ${Python3_SITELIB}/pybind11/include)
+
+    if(EXISTS ${pybind11_INCLUDE_DIR})
+      message("pybind11 exists in the standard path...: ${pybind11_INCLUDE_DIR}")
+    else()
+      message(FATAL_ERROR "pybind11 does not exists even in the standard path. Abort.")
+    endif()
+  endif()
+
+  pybind11_add_module(modern_robotics
+    SHARED
+    src/binder.cpp
+  )
+
+  target_include_directories(modern_robotics
+    PUBLIC
+      include
+      ${pybind11_INCLUDE_DIR}
+      ${Python3_INCLUDE_DIRS} # https://github.com/RUrlus/ModelMetricUncertainty/issues/17
+      ${Python3_SITELIB}/${PROJECT}/hardwares/mocap/include
+    )
+
+  target_link_libraries(modern_robotics
+    PUBLIC
+      Eigen3::Eigen
+      ModernRoboticsCpp
+      pybind11::embed
+  )
+endif()
+
+# --------------------------------------------------------------
 option(DOUBLE_PRECISION "use `double` instead of `float`" OFF)
 if(DOUBLE_PRECISION)
-    ADD_DEFINITIONS( -D_DOUBLE_PRECISION=1)
+  ADD_DEFINITIONS( -D_DOUBLE_PRECISION=1)
 endif()
 add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
 

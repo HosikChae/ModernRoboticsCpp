@@ -2,7 +2,7 @@
 
 #include <Eigen/Dense>
 #include <vector>
-
+#include <iostream>
 namespace mr {
 
 #ifdef _DOUBLE_PRECISION
@@ -699,5 +699,4 @@ std::vector<MatrixXx> SimulateControl(const VectorXx&, const VectorXx&, const Ve
 	const MatrixXx&, const MatrixXx&, const MatrixXx&, const MatrixXx&,
 	const VectorXx&, const std::vector<MatrixXx>&, const std::vector<MatrixXx>&,
 	numericX, numericX, numericX, numericX, int);
-
 }
