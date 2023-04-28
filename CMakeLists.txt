@@ -53,8 +53,10 @@ endif()
 include_directories(include
                     ${EIGEN3_INCLUDE_DIRS})
 
+# Test (optional)
+option(ENABLE_TEST "enable testing of library" OFF)
 
-
+if (ENABLE_TEST)
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.googletest googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -87,10 +89,6 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 
-
-
-add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
-
 set(LIB_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_test.cpp
 )
@@ -98,8 +96,12 @@ set(LIB_TEST_SOURCES
 add_executable(lib_test ${LIB_TEST_SOURCES})
 target_link_libraries( lib_test ModernRoboticsCpp gtest_main)
 
+endif()
 
 
+add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
+
+# Install library in your local paths (optional)
 install (TARGETS ModernRoboticsCpp
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
