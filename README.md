@@ -19,7 +19,8 @@ The primary purpose of the provided software is to be easy to read and education
 
 ## Installation
 
-### 1. Install Eigen library.
+### 1. Install Dependencies.
+# Eigen library
 * On Mac
 ```console
 foo@bar:~$ brew install eigen
@@ -27,6 +28,11 @@ foo@bar:~$ brew install eigen
 * On Linux
 ```console
 foo@bar:~$ sudo apt-get install libeigen3-dev
+```
+
+# PyBind11 (Optional)
+```python
+pip install pybind11
 ```
 
 ### 2. Prepare build
@@ -37,8 +43,13 @@ foo@bar:~$ mkdir build && cd build
 By default cmake will install our build into the system directories.
 To define a custom install directory we simply pass it to cmake:
 ```console
-foo@bar:build $ cmake .. -DCMAKE_INSTALL_PREFIX=../_install
+foo@bar:build $ cmake .. --config=Release -DDOUBLE_PRECISION=ON -DPYTHON_BIND=ON .. -DCMAKE_INSTALL_PREFIX=../_install
 ```
+- `config`: if `Release`, it will optimize the code with `-O3` option. (default: `Debug`)
+- `DOUBLE_PRECISION`: if `ON`, the library will use `double` type Eigen matrices (`MatrixXd`, `VectorXd`, ...). if `OFF`, it will use `float` type (`MatrixXf`, `VectorXf`, ...). (default: `OFF`)
+- `PYTHON_BIND`: if `ON`, it will compile python module using `pybind11` and generate `modern_robotics.so`. (default: `OFF`)
+- `ENABLE_TEST`: if `ON`, it will compile a unit test module (based on `gtest`). (default: `OFF`)
+
 Or just configure with defaults
 ```console
 foo@bar:build $ cmake ..
