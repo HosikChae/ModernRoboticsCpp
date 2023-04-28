@@ -17,46 +17,46 @@ namespace mr {
 	 * Inputs: value to be checked as a double
 	 * Returns: Boolean of true-ignore or false-can't ignore
 	 */
-	bool NearZero(const double val) {
+	bool NearZero(const numericX val) {
 		return (std::abs(val) < .000001);
 	}
 
 	/*
 	 * Function: Calculate the 6x6 matrix [adV] of the given 6-vector
-	 * Input: Eigen::VectorXd (6x1)
-	 * Output: Eigen::MatrixXd (6x6)
+	 * Input: VectorXx (6x1)
+	 * Output: MatrixXx (6x6)
 	 * Note: Can be used to calculate the Lie bracket [V1, V2] = [adV1]V2
 	 */
-	Eigen::MatrixXd ad(Eigen::VectorXd V) {
-		Eigen::Matrix3d omgmat = VecToso3(Eigen::Vector3d(V(0), V(1), V(2)));
+	MatrixXx ad(VectorXx V) {
+		Matrix3x omgmat = VecToso3(Vector3x(V(0), V(1), V(2)));
 
-		Eigen::MatrixXd result(6, 6);
+		MatrixXx result(6, 6);
 		result.topLeftCorner<3, 3>() = omgmat;
-		result.topRightCorner<3, 3>() = Eigen::Matrix3d::Zero(3, 3);
-		result.bottomLeftCorner<3, 3>() = VecToso3(Eigen::Vector3d(V(3), V(4), V(5)));
+		result.topRightCorner<3, 3>() = Matrix3x::Zero(3, 3);
+		result.bottomLeftCorner<3, 3>() = VecToso3(Vector3x(V(3), V(4), V(5)));
 		result.bottomRightCorner<3, 3>() = omgmat;
 		return result;
 	}
 
 	/* Function: Returns a normalized version of the input vector
-	 * Input: Eigen::MatrixXd
-	 * Output: Eigen::MatrixXd
-	 * Note: MatrixXd is used instead of VectorXd for the case of row vectors
+	 * Input: MatrixXx
+	 * Output: MatrixXx
+	 * Note: MatrixXx is used instead of VectorXx for the case of row vectors
 	 * 		Requires a copy
-	 *		Useful because of the MatrixXd casting
+	 *		Useful because of the MatrixXx casting
 	 */
-	Eigen::MatrixXd Normalize(Eigen::MatrixXd V) {
+	MatrixXx Normalize(MatrixXx V) {
 		V.normalize();
 		return V;
 	}
 
 
 	/* Function: Returns the skew symmetric matrix representation of an angular velocity vector
-	 * Input: Eigen::Vector3d 3x1 angular velocity vector
-	 * Returns: Eigen::MatrixXd 3x3 skew symmetric matrix
+	 * Input: Vector3x 3x1 angular velocity vector
+	 * Returns: MatrixXx 3x3 skew symmetric matrix
 	 */
-	Eigen::Matrix3d VecToso3(const Eigen::Vector3d& omg) {
-		Eigen::Matrix3d m_ret;
+	Matrix3x VecToso3(const Vector3x& omg) {
+		Matrix3x m_ret;
 		m_ret << 0, -omg(2), omg(1),
 			omg(2), 0, -omg(0),
 			-omg(1), omg(0), 0;
@@ -65,11 +65,11 @@ namespace mr {
 
 
 	/* Function: Returns angular velocity vector represented by the skew symmetric matrix
-	 * Inputs: Eigen::MatrixXd 3x3 skew symmetric matrix
-	 * Returns: Eigen::Vector3d 3x1 angular velocity
+	 * Inputs: MatrixXx 3x3 skew symmetric matrix
+	 * Returns: Vector3x 3x1 angular velocity
 	 */
-	Eigen::Vector3d so3ToVec(const Eigen::MatrixXd& so3mat) {
-		Eigen::Vector3d v_ret;
+	Vector3x so3ToVec(const MatrixXx& so3mat) {
+		Vector3x v_ret;
 		v_ret << so3mat(2, 1), so3mat(0, 2), so3mat(1, 0);
 		return v_ret;
 	}
@@ -80,8 +80,8 @@ namespace mr {
 	 *				and the angle of rotation)
 	 * Returns: The axis and angle of rotation as [x, y, z, theta]
 	 */
-	Eigen::Vector4d AxisAng3(const Eigen::Vector3d& expc3) {
-		Eigen::Vector4d v_ret;
+	Vector4x AxisAng3(const Vector3x& expc3) {
+		Vector4x v_ret;
 		v_ret << Normalize(expc3), expc3.norm();
 		return v_ret;
 	}
@@ -91,16 +91,16 @@ namespace mr {
 	 * Inputs: exponenential representation of a rotation
 	 * Returns: Rotation matrix
 	 */
-	Eigen::Matrix3d MatrixExp3(const Eigen::Matrix3d& so3mat) {
-		Eigen::Vector3d omgtheta = so3ToVec(so3mat);
+	Matrix3x MatrixExp3(const Matrix3x& so3mat) {
+		Vector3x omgtheta = so3ToVec(so3mat);
 
-		Eigen::Matrix3d m_ret = Eigen::Matrix3d::Identity();
+		Matrix3x m_ret = Matrix3x::Identity();
 		if (NearZero(so3mat.norm())) {
 			return m_ret;
 		}
 		else {
-			double theta = (AxisAng3(omgtheta))(3);
-			Eigen::Matrix3d omgmat = so3mat * (1 / theta);
+			numericX theta = (AxisAng3(omgtheta))(3);
+			Matrix3x omgmat = so3mat * (1 / theta);
 			return m_ret + std::sin(theta) * omgmat + ((1 - std::cos(theta)) * (omgmat * omgmat));
 		}
 	}
@@ -110,24 +110,24 @@ namespace mr {
 	 * Inputs: Rotation matrix
 	 * Returns: matrix logarithm of a rotation
 	 */
-	Eigen::Matrix3d MatrixLog3(const Eigen::Matrix3d& R) {
-		double acosinput = (R.trace() - 1) / 2.0;
-		Eigen::MatrixXd m_ret = Eigen::MatrixXd::Zero(3, 3);
+	Matrix3x MatrixLog3(const Matrix3x& R) {
+		numericX acosinput = (R.trace() - 1) / 2.0;
+		MatrixXx m_ret = MatrixXx::Zero(3, 3);
 		if (acosinput >= 1)
 			return m_ret;
 		else if (acosinput <= -1) {
-			Eigen::Vector3d omg;
+			Vector3x omg;
 			if (!NearZero(1 + R(2, 2)))
-				omg = (1.0 / std::sqrt(2 * (1 + R(2, 2))))*Eigen::Vector3d(R(0, 2), R(1, 2), 1 + R(2, 2));
+				omg = (1.0 / std::sqrt(2 * (1 + R(2, 2))))*Vector3x(R(0, 2), R(1, 2), 1 + R(2, 2));
 			else if (!NearZero(1 + R(1, 1)))
-				omg = (1.0 / std::sqrt(2 * (1 + R(1, 1))))*Eigen::Vector3d(R(0, 1), 1 + R(1, 1), R(2, 1));
+				omg = (1.0 / std::sqrt(2 * (1 + R(1, 1))))*Vector3x(R(0, 1), 1 + R(1, 1), R(2, 1));
 			else
-				omg = (1.0 / std::sqrt(2 * (1 + R(0, 0))))*Eigen::Vector3d(1 + R(0, 0), R(1, 0), R(2, 0));
+				omg = (1.0 / std::sqrt(2 * (1 + R(0, 0))))*Vector3x(1 + R(0, 0), R(1, 0), R(2, 0));
 			m_ret = VecToso3(M_PI * omg);
 			return m_ret;
 		}
 		else {
-			double theta = std::acos(acosinput);
+			numericX theta = std::acos(acosinput);
 			m_ret = theta / 2.0 / sin(theta)*(R - R.transpose());
 			return m_ret;
 		}
@@ -139,8 +139,8 @@ namespace mr {
 	 * Returns: Matrix of T = [ [R, p],
 	 *						    [0, 1] ]
 	 */
-	Eigen::MatrixXd RpToTrans(const Eigen::Matrix3d& R, const Eigen::Vector3d& p) {
-		Eigen::MatrixXd m_ret(4, 4);
+	MatrixXx RpToTrans(const Matrix3x& R, const Vector3x& p) {
+		MatrixXx m_ret(4, 4);
 		m_ret << R, p,
 			0, 0, 0, 1;
 		return m_ret;
@@ -152,13 +152,13 @@ namespace mr {
 	 * Inputs: Homogeneous transformation matrix
 	 * Returns: std::vector of [rotation matrix, position vector]
 	 */
-	std::vector<Eigen::MatrixXd> TransToRp(const Eigen::MatrixXd& T) {
-		std::vector<Eigen::MatrixXd> Rp_ret;
-		Eigen::Matrix3d R_ret;
+	std::vector<MatrixXx> TransToRp(const MatrixXx& T) {
+		std::vector<MatrixXx> Rp_ret;
+		Matrix3x R_ret;
 		// Get top left 3x3 corner
 		R_ret = T.block<3, 3>(0, 0);
 
-		Eigen::Vector3d p_ret(T(0, 3), T(1, 3), T(2, 3));
+		Vector3x p_ret(T(0, 3), T(1, 3), T(2, 3));
 
 		Rp_ret.push_back(R_ret);
 		Rp_ret.push_back(p_ret);
@@ -171,13 +171,13 @@ namespace mr {
 	 * Inputs: Spatial velocity vector [angular velocity, linear velocity]
 	 * Returns: Transformation matrix
 	 */
-	Eigen::MatrixXd VecTose3(const Eigen::VectorXd& V) {
+	MatrixXx VecTose3(const VectorXx& V) {
 		// Separate angular (exponential representation) and linear velocities
-		Eigen::Vector3d exp(V(0), V(1), V(2));
-		Eigen::Vector3d linear(V(3), V(4), V(5));
+		Vector3x exp(V(0), V(1), V(2));
+		Vector3x linear(V(3), V(4), V(5));
 
 		// Fill in values to the appropriate parts of the transformation matrix
-		Eigen::MatrixXd m_ret(4, 4);
+		MatrixXx m_ret(4, 4);
 		m_ret << VecToso3(exp), linear,
 			0, 0, 0, 0;
 
@@ -189,8 +189,8 @@ namespace mr {
 	 * Inputs: Transformation matrix
 	 * Returns: Spatial velocity vector [angular velocity, linear velocity]
 	 */
-	Eigen::VectorXd se3ToVec(const Eigen::MatrixXd& T) {
-		Eigen::VectorXd m_ret(6);
+	VectorXx se3ToVec(const MatrixXx& T) {
+		VectorXx m_ret(6);
 		m_ret << T(2, 1), T(0, 2), T(1, 0), T(0, 3), T(1, 3), T(2, 3);
 
 		return m_ret;
@@ -202,11 +202,11 @@ namespace mr {
 	 * Inputs: 4x4 Transformation matrix SE(3)
 	 * Returns: 6x6 Adjoint Representation of the matrix
 	 */
-	Eigen::MatrixXd Adjoint(const Eigen::MatrixXd& T) {
-		std::vector<Eigen::MatrixXd> R = TransToRp(T);
-		Eigen::MatrixXd ad_ret(6, 6);
-		ad_ret = Eigen::MatrixXd::Zero(6, 6);
-		Eigen::MatrixXd zeroes = Eigen::MatrixXd::Zero(3, 3);
+	MatrixXx Adjoint(const MatrixXx& T) {
+		std::vector<MatrixXx> R = TransToRp(T);
+		MatrixXx ad_ret(6, 6);
+		ad_ret = MatrixXx::Zero(6, 6);
+		MatrixXx zeroes = MatrixXx::Zero(3, 3);
 		ad_ret << R[0], zeroes,
 			VecToso3(R[1]) * R[0], R[0];
 		return ad_ret;
@@ -217,18 +217,18 @@ namespace mr {
 	 * Inputs: se3 matrix representation of exponential coordinates (transformation matrix)
 	 * Returns: 6x6 Matrix representing the rotation
 	 */
-	Eigen::MatrixXd MatrixExp6(const Eigen::MatrixXd& se3mat) {
+	MatrixXx MatrixExp6(const MatrixXx& se3mat) {
 		// Extract the angular velocity vector from the transformation matrix
-		Eigen::Matrix3d se3mat_cut = se3mat.block<3, 3>(0, 0);
-		Eigen::Vector3d omgtheta = so3ToVec(se3mat_cut);
+		Matrix3x se3mat_cut = se3mat.block<3, 3>(0, 0);
+		Vector3x omgtheta = so3ToVec(se3mat_cut);
 
-		Eigen::MatrixXd m_ret(4, 4);
+		MatrixXx m_ret(4, 4);
 
 		// If negligible rotation, m_Ret = [[Identity, angular velocty ]]
 		//									[	0	 ,		1		   ]]
 		if (NearZero(omgtheta.norm())) {
 			// Reuse previous variables that have our required size
-			se3mat_cut = Eigen::MatrixXd::Identity(3, 3);
+			se3mat_cut = MatrixXx::Identity(3, 3);
 			omgtheta << se3mat(0, 3), se3mat(1, 3), se3mat(2, 3);
 			m_ret << se3mat_cut, omgtheta,
 				0, 0, 0, 1;
@@ -236,11 +236,11 @@ namespace mr {
 		}
 		// If not negligible, MR page 105
 		else {
-			double theta = (AxisAng3(omgtheta))(3);
-			Eigen::Matrix3d omgmat = se3mat.block<3, 3>(0, 0) / theta;
-			Eigen::Matrix3d expExpand = Eigen::MatrixXd::Identity(3, 3) * theta + (1 - std::cos(theta)) * omgmat + ((theta - std::sin(theta)) * (omgmat * omgmat));
-			Eigen::Vector3d linear(se3mat(0, 3), se3mat(1, 3), se3mat(2, 3));
-			Eigen::Vector3d GThetaV = (expExpand*linear) / theta;
+			numericX theta = (AxisAng3(omgtheta))(3);
+			Matrix3x omgmat = se3mat.block<3, 3>(0, 0) / theta;
+			Matrix3x expExpand = MatrixXx::Identity(3, 3) * theta + (1 - std::cos(theta)) * omgmat + ((theta - std::sin(theta)) * (omgmat * omgmat));
+			Vector3x linear(se3mat(0, 3), se3mat(1, 3), se3mat(2, 3));
+			Vector3x GThetaV = (expExpand*linear) / theta;
 			m_ret << MatrixExp3(se3mat_cut), GThetaV,
 				0, 0, 0, 1;
 			return m_ret;
@@ -248,20 +248,20 @@ namespace mr {
 
 	}
 
-	Eigen::MatrixXd MatrixLog6(const Eigen::MatrixXd& T) {
-		Eigen::MatrixXd m_ret(4, 4);
+	MatrixXx MatrixLog6(const MatrixXx& T) {
+		MatrixXx m_ret(4, 4);
 		auto rp = mr::TransToRp(T);
-		Eigen::Matrix3d omgmat = MatrixLog3(rp.at(0));
-		Eigen::Matrix3d zeros3d = Eigen::Matrix3d::Zero(3, 3);
+		Matrix3x omgmat = MatrixLog3(rp.at(0));
+		Matrix3x zeros3x = Matrix3x::Zero(3, 3);
 		if (NearZero(omgmat.norm())) {
-			m_ret << zeros3d, rp.at(1),
+			m_ret << zeros3x, rp.at(1),
 				0, 0, 0, 0;
 		}
 		else {
-			double theta = std::acos((rp.at(0).trace() - 1) / 2.0);
-			Eigen::Matrix3d logExpand1 = Eigen::MatrixXd::Identity(3, 3) - omgmat / 2.0;
-			Eigen::Matrix3d logExpand2 = (1.0 / theta - 1.0 / std::tan(theta / 2.0) / 2)*omgmat*omgmat / theta;
-			Eigen::Matrix3d logExpand = logExpand1 + logExpand2;
+			numericX theta = std::acos((rp.at(0).trace() - 1) / 2.0);
+			Matrix3x logExpand1 = MatrixXx::Identity(3, 3) - omgmat / 2.0;
+			Matrix3x logExpand2 = (1.0 / theta - 1.0 / std::tan(theta / 2.0) / 2)*omgmat*omgmat / theta;
+			Matrix3x logExpand = logExpand1 + logExpand2;
 			m_ret << omgmat, logExpand*rp.at(1),
 				0, 0, 0, 0;
 		}
@@ -278,8 +278,8 @@ namespace mr {
 	 *				at the specified coordinates
 	 * Notes: FK means Forward Kinematics
 	 */
-	Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd& M, const Eigen::MatrixXd& Slist, const Eigen::VectorXd& thetaList) {
-		Eigen::MatrixXd T = M;
+	MatrixXx FKinSpace(const MatrixXx& M, const MatrixXx& Slist, const VectorXx& thetaList) {
+		MatrixXx T = M;
 		for (int i = (thetaList.size() - 1); i > -1; i--) {
 			T = MatrixExp6(VecTose3(Slist.col(i)*thetaList(i))) * T;
 		}
@@ -296,8 +296,8 @@ namespace mr {
 	 *				at the specified coordinates
 	 * Notes: FK means Forward Kinematics
 	 */
-	Eigen::MatrixXd FKinBody(const Eigen::MatrixXd& M, const Eigen::MatrixXd& Blist, const Eigen::VectorXd& thetaList) {
-		Eigen::MatrixXd T = M;
+	MatrixXx FKinBody(const MatrixXx& M, const MatrixXx& Blist, const VectorXx& thetaList) {
+		MatrixXx T = M;
 		for (int i = 0; i < thetaList.size(); i++) {
 			T = T * MatrixExp6(VecTose3(Blist.col(i)*thetaList(i)));
 		}
@@ -309,10 +309,10 @@ namespace mr {
 	 * Inputs: Screw axis in home position, joint configuration
 	 * Returns: 6xn Spatial Jacobian
 	 */
-	Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixXd& thetaList) {
-		Eigen::MatrixXd Js = Slist;
-		Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4, 4);
-		Eigen::VectorXd sListTemp(Slist.col(0).size());
+	MatrixXx JacobianSpace(const MatrixXx& Slist, const MatrixXx& thetaList) {
+		MatrixXx Js = Slist;
+		MatrixXx T = MatrixXx::Identity(4, 4);
+		VectorXx sListTemp(Slist.col(0).size());
 		for (int i = 1; i < thetaList.size(); i++) {
 			sListTemp << Slist.col(i - 1) * thetaList(i - 1);
 			T = T * MatrixExp6(VecTose3(sListTemp));
@@ -328,10 +328,10 @@ namespace mr {
 	 * Inputs: Screw axis in BODY position, joint configuration
 	 * Returns: 6xn Bobdy Jacobian
 	 */
-	Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& thetaList) {
-		Eigen::MatrixXd Jb = Blist;
-		Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4, 4);
-		Eigen::VectorXd bListTemp(Blist.col(0).size());
+	MatrixXx JacobianBody(const MatrixXx& Blist, const MatrixXx& thetaList) {
+		MatrixXx Jb = Blist;
+		MatrixXx T = MatrixXx::Identity(4, 4);
+		VectorXx bListTemp(Blist.col(0).size());
 		for (int i = thetaList.size() - 2; i >= 0; i--) {
 			bListTemp << Blist.col(i + 1) * thetaList(i + 1);
 			T = T * MatrixExp6(VecTose3(-1 * bListTemp));
@@ -341,93 +341,93 @@ namespace mr {
 		return Jb;
 	}
 
-	Eigen::MatrixXd TransInv(const Eigen::MatrixXd& transform) {
+	MatrixXx TransInv(const MatrixXx& transform) {
 		auto rp = mr::TransToRp(transform);
 		auto Rt = rp.at(0).transpose();
 		auto t = -(Rt * rp.at(1));
-		Eigen::MatrixXd inv(4, 4);
-		inv = Eigen::MatrixXd::Zero(4,4);
+		MatrixXx inv(4, 4);
+		inv = MatrixXx::Zero(4,4);
 		inv.block(0, 0, 3, 3) = Rt;
 		inv.block(0, 3, 3, 1) = t;
 		inv(3, 3) = 1;
 		return inv;
 	}
 
-	Eigen::MatrixXd RotInv(const Eigen::MatrixXd& rotMatrix) {
+	MatrixXx RotInv(const MatrixXx& rotMatrix) {
 		return rotMatrix.transpose();
 	}
 
-	Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h) {
-		Eigen::VectorXd axis(6);
+	VectorXx ScrewToAxis(Vector3x q, Vector3x s, numericX h) {
+		VectorXx axis(6);
 		axis.segment(0, 3) = s;
 		axis.segment(3, 3) = q.cross(s) + (h * s);
 		return axis;
 	}
 
-	Eigen::VectorXd AxisAng6(const Eigen::VectorXd& expc6) {
-		Eigen::VectorXd v_ret(7);
-		double theta = Eigen::Vector3d(expc6(0), expc6(1), expc6(2)).norm();
+	VectorXx AxisAng6(const VectorXx& expc6) {
+		VectorXx v_ret(7);
+		numericX theta = Vector3x(expc6(0), expc6(1), expc6(2)).norm();
 		if (NearZero(theta))
-			theta = Eigen::Vector3d(expc6(3), expc6(4), expc6(5)).norm();
+			theta = Vector3x(expc6(3), expc6(4), expc6(5)).norm();
 		v_ret << expc6 / theta, theta;
 		return v_ret;
 	}
 
-	Eigen::MatrixXd ProjectToSO3(const Eigen::MatrixXd& M) {
-		Eigen::JacobiSVD<Eigen::MatrixXd> svd(M, Eigen::ComputeFullU | Eigen::ComputeFullV);
-		Eigen::MatrixXd R = svd.matrixU() * svd.matrixV().transpose();
+	MatrixXx ProjectToSO3(const MatrixXx& M) {
+		Eigen::JacobiSVD<MatrixXx> svd(M, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		MatrixXx R = svd.matrixU() * svd.matrixV().transpose();
 		if (R.determinant() < 0)
 			// In this case the result may be far from M; reverse sign of 3rd column
 			R.col(2) *= -1;
 		return R;
 	}
 
-	Eigen::MatrixXd ProjectToSE3(const Eigen::MatrixXd& M) {
-		Eigen::Matrix3d R = M.block<3, 3>(0, 0);
-		Eigen::Vector3d t = M.block<3, 1>(0, 3);
-		Eigen::MatrixXd T = RpToTrans(ProjectToSO3(R), t);
+	MatrixXx ProjectToSE3(const MatrixXx& M) {
+		Matrix3x R = M.block<3, 3>(0, 0);
+		Vector3x t = M.block<3, 1>(0, 3);
+		MatrixXx T = RpToTrans(ProjectToSO3(R), t);
 		return T;
 	}
 
-	double DistanceToSO3(const Eigen::Matrix3d& M) {
+	numericX DistanceToSO3(const Matrix3x& M) {
 		if (M.determinant() > 0)
-			return (M.transpose() * M - Eigen::Matrix3d::Identity()).norm();
+			return (M.transpose() * M - Matrix3x::Identity()).norm();
 		else
 			return 1.0e9;
 	}
 
-	double DistanceToSE3(const Eigen::Matrix4d& T) {
-		Eigen::Matrix3d matR = T.block<3, 3>(0, 0);
+	numericX DistanceToSE3(const Matrix4x& T) {
+		Matrix3x matR = T.block<3, 3>(0, 0);
 		if (matR.determinant() > 0) {
-			Eigen::Matrix4d m_ret;
-			m_ret << matR.transpose()*matR, Eigen::Vector3d::Zero(3),
+			Matrix4x m_ret;
+			m_ret << matR.transpose()*matR, Vector3x::Zero(3),
 				T.row(3);
-			m_ret = m_ret - Eigen::Matrix4d::Identity();
+			m_ret = m_ret - Matrix4x::Identity();
 			return m_ret.norm();
 		}
 		else
 			return 1.0e9;
 	}
 
-	bool TestIfSO3(const Eigen::Matrix3d& M) {
+	bool TestIfSO3(const Matrix3x& M) {
 		return std::abs(DistanceToSO3(M)) < 1e-3;
 	}
 
-	bool TestIfSE3(const Eigen::Matrix4d& T) {
+	bool TestIfSE3(const Matrix4x& T) {
 		return std::abs(DistanceToSE3(T)) < 1e-3;
 	}
-	bool IKinBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& M, const Eigen::MatrixXd& T,
-		Eigen::VectorXd& thetalist, double eomg, double ev) {
+	bool IKinBody(const MatrixXx& Blist, const MatrixXx& M, const MatrixXx& T,
+		VectorXx& thetalist, numericX eomg, numericX ev) {
 		int i = 0;
 		int maxiterations = 20;
-		Eigen::MatrixXd Tfk = FKinBody(M, Blist, thetalist);
-		Eigen::MatrixXd Tdiff = TransInv(Tfk)*T;
-		Eigen::VectorXd Vb = se3ToVec(MatrixLog6(Tdiff));
-		Eigen::Vector3d angular(Vb(0), Vb(1), Vb(2));
-		Eigen::Vector3d linear(Vb(3), Vb(4), Vb(5));
+		MatrixXx Tfk = FKinBody(M, Blist, thetalist);
+		MatrixXx Tdiff = TransInv(Tfk)*T;
+		VectorXx Vb = se3ToVec(MatrixLog6(Tdiff));
+		Vector3x angular(Vb(0), Vb(1), Vb(2));
+		Vector3x linear(Vb(3), Vb(4), Vb(5));
 
 		bool err = (angular.norm() > eomg || linear.norm() > ev);
-		Eigen::MatrixXd Jb;
+		MatrixXx Jb;
 		while (err && i < maxiterations) {
 			Jb = JacobianBody(Blist, thetalist);
 			thetalist += Jb.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Vb);
@@ -436,25 +436,25 @@ namespace mr {
 			Tfk = FKinBody(M, Blist, thetalist);
 			Tdiff = TransInv(Tfk)*T;
 			Vb = se3ToVec(MatrixLog6(Tdiff));
-			angular = Eigen::Vector3d(Vb(0), Vb(1), Vb(2));
-			linear = Eigen::Vector3d(Vb(3), Vb(4), Vb(5));
+			angular = Vector3x(Vb(0), Vb(1), Vb(2));
+			linear = Vector3x(Vb(3), Vb(4), Vb(5));
 			err = (angular.norm() > eomg || linear.norm() > ev);
 		}
 		return !err;
 	}
 
-	bool IKinSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixXd& M, const Eigen::MatrixXd& T,
-		Eigen::VectorXd& thetalist, double eomg, double ev) {
+	bool IKinSpace(const MatrixXx& Slist, const MatrixXx& M, const MatrixXx& T,
+		VectorXx& thetalist, numericX eomg, numericX ev) {
 		int i = 0;
 		int maxiterations = 20;
-		Eigen::MatrixXd Tfk = FKinSpace(M, Slist, thetalist);
-		Eigen::MatrixXd Tdiff = TransInv(Tfk)*T;
-		Eigen::VectorXd Vs = Adjoint(Tfk)*se3ToVec(MatrixLog6(Tdiff));
-		Eigen::Vector3d angular(Vs(0), Vs(1), Vs(2));
-		Eigen::Vector3d linear(Vs(3), Vs(4), Vs(5));
+		MatrixXx Tfk = FKinSpace(M, Slist, thetalist);
+		MatrixXx Tdiff = TransInv(Tfk)*T;
+		VectorXx Vs = Adjoint(Tfk)*se3ToVec(MatrixLog6(Tdiff));
+		Vector3x angular(Vs(0), Vs(1), Vs(2));
+		Vector3x linear(Vs(3), Vs(4), Vs(5));
 
 		bool err = (angular.norm() > eomg || linear.norm() > ev);
-		Eigen::MatrixXd Js;
+		MatrixXx Js;
 		while (err && i < maxiterations) {
 			Js = JacobianSpace(Slist, thetalist);
 			thetalist += Js.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Vs);
@@ -463,8 +463,8 @@ namespace mr {
 			Tfk = FKinSpace(M, Slist, thetalist);
 			Tdiff = TransInv(Tfk)*T;
 			Vs = Adjoint(Tfk)*se3ToVec(MatrixLog6(Tdiff));
-			angular = Eigen::Vector3d(Vs(0), Vs(1), Vs(2));
-			linear = Eigen::Vector3d(Vs(3), Vs(4), Vs(5));
+			angular = Vector3x(Vs(0), Vs(1), Vs(2));
+			linear = Vector3x(Vs(3), Vs(4), Vs(5));
 			err = (angular.norm() > eomg || linear.norm() > ev);
 		}
 		return !err;
@@ -490,26 +490,26 @@ namespace mr {
 	*  taulist: The n-vector of required joint forces/torques
 	*
 	*/
-	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist,
-									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist,
-									const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	VectorXx InverseDynamics(const VectorXx& thetalist, const VectorXx& dthetalist, const VectorXx& ddthetalist,
+									const VectorXx& g, const VectorXx& Ftip, const std::vector<MatrixXx>& Mlist,
+									const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 	    // the size of the lists
 		int n = thetalist.size();
 
-		Eigen::MatrixXd Mi = Eigen::MatrixXd::Identity(4, 4);
-		Eigen::MatrixXd Ai = Eigen::MatrixXd::Zero(6,n);
-		std::vector<Eigen::MatrixXd> AdTi;
+		MatrixXx Mi = MatrixXx::Identity(4, 4);
+		MatrixXx Ai = MatrixXx::Zero(6,n);
+		std::vector<MatrixXx> AdTi;
 		for (int i = 0; i < n+1; i++) {
-			AdTi.push_back(Eigen::MatrixXd::Zero(6,6));
+			AdTi.push_back(MatrixXx::Zero(6,6));
 		}
-		Eigen::MatrixXd Vi = Eigen::MatrixXd::Zero(6,n+1);    // velocity
-		Eigen::MatrixXd Vdi = Eigen::MatrixXd::Zero(6,n+1);   // acceleration
+		MatrixXx Vi = MatrixXx::Zero(6,n+1);    // velocity
+		MatrixXx Vdi = MatrixXx::Zero(6,n+1);   // acceleration
 
 		Vdi.block(3, 0, 3, 1) = - g;
 		AdTi[n] = mr::Adjoint(mr::TransInv(Mlist[n]));
-		Eigen::VectorXd Fi = Ftip;
+		VectorXx Fi = Ftip;
 
-		Eigen::VectorXd taulist = Eigen::VectorXd::Zero(n);
+		VectorXx taulist = VectorXx::Zero(n);
 
 		// forward pass
 		for (int i = 0; i < n; i++) {
@@ -548,12 +548,12 @@ namespace mr {
 	 *  grav: The 3-vector showing the effect force of gravity to the dynamics
 	 *
 	 */
-	Eigen::VectorXd GravityForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& g,
-									const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	VectorXx GravityForces(const VectorXx& thetalist, const VectorXx& g,
+									const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 	    int n = thetalist.size();
-		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd dummyForce = Eigen::VectorXd::Zero(6);
-		Eigen::VectorXd grav = mr::InverseDynamics(thetalist, dummylist, dummylist, g,
+		VectorXx dummylist = VectorXx::Zero(n);
+		VectorXx dummyForce = VectorXx::Zero(6);
+		VectorXx grav = mr::InverseDynamics(thetalist, dummylist, dummylist, g,
                                                 dummyForce, Mlist, Glist, Slist);
 		return grav;
 	}
@@ -575,15 +575,15 @@ namespace mr {
 	 *  M: The numerical inertia matrix M(thetalist) of an n-joint serial
 	 *     chain at the given configuration thetalist.
 	 */
-	Eigen::MatrixXd MassMatrix(const Eigen::VectorXd& thetalist,
-                                const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	MatrixXx MassMatrix(const VectorXx& thetalist,
+                                const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 		int n = thetalist.size();
-		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
-		Eigen::VectorXd dummyforce = Eigen::VectorXd::Zero(6);
-		Eigen::MatrixXd M = Eigen::MatrixXd::Zero(n,n);
+		VectorXx dummylist = VectorXx::Zero(n);
+		VectorXx dummyg = VectorXx::Zero(3);
+		VectorXx dummyforce = VectorXx::Zero(6);
+		MatrixXx M = MatrixXx::Zero(n,n);
 		for (int i = 0; i < n; i++) {
-			Eigen::VectorXd ddthetalist = Eigen::VectorXd::Zero(n);
+			VectorXx ddthetalist = VectorXx::Zero(n);
 			ddthetalist(i) = 1;
 			M.col(i) = mr::InverseDynamics(thetalist, dummylist, ddthetalist,
                              dummyg, dummyforce, Mlist, Glist, Slist);
@@ -607,13 +607,13 @@ namespace mr {
 	 *  c: The vector c(thetalist,dthetalist) of Coriolis and centripetal
 	 *     terms for a given thetalist and dthetalist.
 	 */
-	Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist,
-                                const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	VectorXx VelQuadraticForces(const VectorXx& thetalist, const VectorXx& dthetalist,
+                                const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 		int n = thetalist.size();
-		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
-		Eigen::VectorXd dummyforce = Eigen::VectorXd::Zero(6);
-		Eigen::VectorXd c = mr::InverseDynamics(thetalist, dthetalist, dummylist,
+		VectorXx dummylist = VectorXx::Zero(n);
+		VectorXx dummyg = VectorXx::Zero(3);
+		VectorXx dummyforce = VectorXx::Zero(6);
+		VectorXx c = mr::InverseDynamics(thetalist, dthetalist, dummylist,
                              dummyg, dummyforce, Mlist, Glist, Slist);
 		return c;
 	}
@@ -634,13 +634,13 @@ namespace mr {
 	 *  JTFtip: The joint forces and torques required only to create the
 	 *     end-effector force Ftip.
 	 */
-	Eigen::VectorXd EndEffectorForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& Ftip,
-								const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	VectorXx EndEffectorForces(const VectorXx& thetalist, const VectorXx& Ftip,
+								const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 		int n = thetalist.size();
-		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
+		VectorXx dummylist = VectorXx::Zero(n);
+		VectorXx dummyg = VectorXx::Zero(3);
 
-		Eigen::VectorXd JTFtip = mr::InverseDynamics(thetalist, dummylist, dummylist,
+		VectorXx JTFtip = mr::InverseDynamics(thetalist, dummylist, dummylist,
                              dummyg, Ftip, Mlist, Glist, Slist);
 		return JTFtip;
 	}
@@ -664,60 +664,60 @@ namespace mr {
 	 *  ddthetalist: The resulting joint accelerations
 	 *
 	 */
-	Eigen::VectorXd ForwardDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& taulist,
-									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist,
-									const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	VectorXx ForwardDynamics(const VectorXx& thetalist, const VectorXx& dthetalist, const VectorXx& taulist,
+									const VectorXx& g, const VectorXx& Ftip, const std::vector<MatrixXx>& Mlist,
+									const std::vector<MatrixXx>& Glist, const MatrixXx& Slist) {
 
-		Eigen::VectorXd totalForce = taulist - mr::VelQuadraticForces(thetalist, dthetalist, Mlist, Glist, Slist)
+		VectorXx totalForce = taulist - mr::VelQuadraticForces(thetalist, dthetalist, Mlist, Glist, Slist)
                  							 - mr::GravityForces(thetalist, g, Mlist, Glist, Slist)
                                              - mr::EndEffectorForces(thetalist, Ftip, Mlist, Glist, Slist);
 
-		Eigen::MatrixXd M = mr::MassMatrix(thetalist, Mlist, Glist, Slist);
+		MatrixXx M = mr::MassMatrix(thetalist, Mlist, Glist, Slist);
 
 		// Use LDLT since M is positive definite
-        Eigen::VectorXd ddthetalist = M.ldlt().solve(totalForce);
+        VectorXx ddthetalist = M.ldlt().solve(totalForce);
 
 		return ddthetalist;
 	}
 
-	void EulerStep(Eigen::VectorXd& thetalist, Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist, double dt) {
+	void EulerStep(VectorXx& thetalist, VectorXx& dthetalist, const VectorXx& ddthetalist, numericX dt) {
 		thetalist += dthetalist * dt;
 		dthetalist += ddthetalist * dt;
 		return;
 	}
 
-	Eigen::MatrixXd InverseDynamicsTrajectory(const Eigen::MatrixXd& thetamat, const Eigen::MatrixXd& dthetamat, const Eigen::MatrixXd& ddthetamat,
-		const Eigen::VectorXd& g, const Eigen::MatrixXd& Ftipmat, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
-		const Eigen::MatrixXd& Slist) {
-		Eigen::MatrixXd thetamatT = thetamat.transpose();
-		Eigen::MatrixXd dthetamatT = dthetamat.transpose();
-		Eigen::MatrixXd ddthetamatT = ddthetamat.transpose();
-		Eigen::MatrixXd FtipmatT = Ftipmat.transpose();
+	MatrixXx InverseDynamicsTrajectory(const MatrixXx& thetamat, const MatrixXx& dthetamat, const MatrixXx& ddthetamat,
+		const VectorXx& g, const MatrixXx& Ftipmat, const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist,
+		const MatrixXx& Slist) {
+		MatrixXx thetamatT = thetamat.transpose();
+		MatrixXx dthetamatT = dthetamat.transpose();
+		MatrixXx ddthetamatT = ddthetamat.transpose();
+		MatrixXx FtipmatT = Ftipmat.transpose();
 
 		int N = thetamat.rows();  // trajectory points
 		int dof = thetamat.cols();
-		Eigen::MatrixXd taumatT = Eigen::MatrixXd::Zero(dof, N);
+		MatrixXx taumatT = MatrixXx::Zero(dof, N);
 		for (int i = 0; i < N; ++i) {
 			taumatT.col(i) = InverseDynamics(thetamatT.col(i), dthetamatT.col(i), ddthetamatT.col(i), g, FtipmatT.col(i), Mlist, Glist, Slist);
 		}
-		Eigen::MatrixXd taumat = taumatT.transpose();
+		MatrixXx taumat = taumatT.transpose();
 		return taumat;
 	}
 
-	std::vector<Eigen::MatrixXd> ForwardDynamicsTrajectory(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::MatrixXd& taumat,
-		const Eigen::VectorXd& g, const Eigen::MatrixXd& Ftipmat, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
-		const Eigen::MatrixXd& Slist, double dt, int intRes) {
-		Eigen::MatrixXd taumatT = taumat.transpose();
-		Eigen::MatrixXd FtipmatT = Ftipmat.transpose();
+	std::vector<MatrixXx> ForwardDynamicsTrajectory(const VectorXx& thetalist, const VectorXx& dthetalist, const MatrixXx& taumat,
+		const VectorXx& g, const MatrixXx& Ftipmat, const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist,
+		const MatrixXx& Slist, numericX dt, int intRes) {
+		MatrixXx taumatT = taumat.transpose();
+		MatrixXx FtipmatT = Ftipmat.transpose();
 		int N = taumat.rows();  // force/torque points
 		int dof = taumat.cols();
-		Eigen::MatrixXd thetamatT = Eigen::MatrixXd::Zero(dof, N);
-		Eigen::MatrixXd dthetamatT = Eigen::MatrixXd::Zero(dof, N);
+		MatrixXx thetamatT = MatrixXx::Zero(dof, N);
+		MatrixXx dthetamatT = MatrixXx::Zero(dof, N);
 		thetamatT.col(0) = thetalist;
 		dthetamatT.col(0) = dthetalist;
-		Eigen::VectorXd thetacurrent = thetalist;
-		Eigen::VectorXd dthetacurrent = dthetalist;
-		Eigen::VectorXd ddthetalist;
+		VectorXx thetacurrent = thetalist;
+		VectorXx dthetacurrent = dthetalist;
+		VectorXx ddthetalist;
 		for (int i = 0; i < N - 1; ++i) {
 			for (int j = 0; j < intRes; ++j) {
 				ddthetalist = ForwardDynamics(thetacurrent, dthetacurrent, taumatT.col(i), g, FtipmatT.col(i), Mlist, Glist, Slist);
@@ -726,43 +726,43 @@ namespace mr {
 			thetamatT.col(i + 1) = thetacurrent;
 			dthetamatT.col(i + 1) = dthetacurrent;
 		}
-		std::vector<Eigen::MatrixXd> JointTraj_ret;
+		std::vector<MatrixXx> JointTraj_ret;
 		JointTraj_ret.push_back(thetamatT.transpose());
 		JointTraj_ret.push_back(dthetamatT.transpose());
 		return JointTraj_ret;
 	}
 
-	Eigen::VectorXd ComputedTorque(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& eint,
-		const Eigen::VectorXd& g, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
-		const Eigen::MatrixXd& Slist, const Eigen::VectorXd& thetalistd, const Eigen::VectorXd& dthetalistd, const Eigen::VectorXd& ddthetalistd,
-		double Kp, double Ki, double Kd) {
+	VectorXx ComputedTorque(const VectorXx& thetalist, const VectorXx& dthetalist, const VectorXx& eint,
+		const VectorXx& g, const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist,
+		const MatrixXx& Slist, const VectorXx& thetalistd, const VectorXx& dthetalistd, const VectorXx& ddthetalistd,
+		numericX Kp, numericX Ki, numericX Kd) {
 
-		Eigen::VectorXd e = thetalistd - thetalist;  // position err
-		Eigen::VectorXd tau_feedforward = MassMatrix(thetalist, Mlist, Glist, Slist)*(Kp*e + Ki * (eint + e) + Kd * (dthetalistd - dthetalist));
+		VectorXx e = thetalistd - thetalist;  // position err
+		VectorXx tau_feedforward = MassMatrix(thetalist, Mlist, Glist, Slist)*(Kp*e + Ki * (eint + e) + Kd * (dthetalistd - dthetalist));
 
-		Eigen::VectorXd Ftip = Eigen::VectorXd::Zero(6);
-		Eigen::VectorXd tau_inversedyn = InverseDynamics(thetalist, dthetalist, ddthetalistd, g, Ftip, Mlist, Glist, Slist);
+		VectorXx Ftip = VectorXx::Zero(6);
+		VectorXx tau_inversedyn = InverseDynamics(thetalist, dthetalist, ddthetalistd, g, Ftip, Mlist, Glist, Slist);
 
-		Eigen::VectorXd tau_computed = tau_feedforward + tau_inversedyn;
+		VectorXx tau_computed = tau_feedforward + tau_inversedyn;
 		return tau_computed;
 	}
 
-	double CubicTimeScaling(double Tf, double t) {
-		double timeratio = 1.0*t / Tf;
-		double st = 3 * pow(timeratio, 2) - 2 * pow(timeratio, 3);
+	numericX CubicTimeScaling(numericX Tf, numericX t) {
+		numericX timeratio = 1.0*t / Tf;
+		numericX st = 3 * pow(timeratio, 2) - 2 * pow(timeratio, 3);
 		return st;
 	}
 
-	double QuinticTimeScaling(double Tf, double t) {
-		double timeratio = 1.0*t / Tf;
-		double st = 10 * pow(timeratio, 3) - 15 * pow(timeratio, 4) + 6 * pow(timeratio, 5);
+	numericX QuinticTimeScaling(numericX Tf, numericX t) {
+		numericX timeratio = 1.0*t / Tf;
+		numericX st = 10 * pow(timeratio, 3) - 15 * pow(timeratio, 4) + 6 * pow(timeratio, 5);
 		return st;
 	}
 
-	Eigen::MatrixXd JointTrajectory(const Eigen::VectorXd& thetastart, const Eigen::VectorXd& thetaend, double Tf, int N, int method) {
-		double timegap = Tf / (N - 1);
-		Eigen::MatrixXd trajT = Eigen::MatrixXd::Zero(thetastart.size(), N);
-		double st;
+	MatrixXx JointTrajectory(const VectorXx& thetastart, const VectorXx& thetaend, numericX Tf, int N, int method) {
+		numericX timegap = Tf / (N - 1);
+		MatrixXx trajT = MatrixXx::Zero(thetastart.size(), N);
+		numericX st;
 		for (int i = 0; i < N; ++i) {
 			if (method == 3)
 				st = CubicTimeScaling(Tf, timegap*i);
@@ -770,63 +770,63 @@ namespace mr {
 				st = QuinticTimeScaling(Tf, timegap*i);
 			trajT.col(i) = st * thetaend + (1 - st)*thetastart;
 		}
-		Eigen::MatrixXd traj = trajT.transpose();
+		MatrixXx traj = trajT.transpose();
 		return traj;
 	}
-	std::vector<Eigen::MatrixXd> ScrewTrajectory(const Eigen::MatrixXd& Xstart, const Eigen::MatrixXd& Xend, double Tf, int N, int method) {
-		double timegap = Tf / (N - 1);
-		std::vector<Eigen::MatrixXd> traj(N);
-		double st;
+	std::vector<MatrixXx> ScrewTrajectory(const MatrixXx& Xstart, const MatrixXx& Xend, numericX Tf, int N, int method) {
+		numericX timegap = Tf / (N - 1);
+		std::vector<MatrixXx> traj(N);
+		numericX st;
 		for (int i = 0; i < N; ++i) {
 			if (method == 3)
 				st = CubicTimeScaling(Tf, timegap*i);
 			else
 				st = QuinticTimeScaling(Tf, timegap*i);
-			Eigen::MatrixXd Ttemp = MatrixLog6(TransInv(Xstart)*Xend);
+			MatrixXx Ttemp = MatrixLog6(TransInv(Xstart)*Xend);
 			traj.at(i) = Xstart * MatrixExp6(Ttemp*st);
 		}
 		return traj;
 	}
 
-	std::vector<Eigen::MatrixXd> CartesianTrajectory(const Eigen::MatrixXd& Xstart, const Eigen::MatrixXd& Xend, double Tf, int N, int method) {
-		double timegap = Tf / (N - 1);
-		std::vector<Eigen::MatrixXd> traj(N);
-		std::vector<Eigen::MatrixXd> Rpstart = TransToRp(Xstart);
-		std::vector<Eigen::MatrixXd> Rpend = TransToRp(Xend);
-		Eigen::Matrix3d Rstart = Rpstart[0]; Eigen::Vector3d pstart = Rpstart[1];
-		Eigen::Matrix3d Rend = Rpend[0]; Eigen::Vector3d pend = Rpend[1];
-		double st;
+	std::vector<MatrixXx> CartesianTrajectory(const MatrixXx& Xstart, const MatrixXx& Xend, numericX Tf, int N, int method) {
+		numericX timegap = Tf / (N - 1);
+		std::vector<MatrixXx> traj(N);
+		std::vector<MatrixXx> Rpstart = TransToRp(Xstart);
+		std::vector<MatrixXx> Rpend = TransToRp(Xend);
+		Matrix3x Rstart = Rpstart[0]; Vector3x pstart = Rpstart[1];
+		Matrix3x Rend = Rpend[0]; Vector3x pend = Rpend[1];
+		numericX st;
 		for (int i = 0; i < N; ++i) {
 			if (method == 3)
 				st = CubicTimeScaling(Tf, timegap*i);
 			else
 				st = QuinticTimeScaling(Tf, timegap*i);
-			Eigen::Matrix3d Ri = Rstart * MatrixExp3(MatrixLog3(Rstart.transpose() * Rend)*st);
-			Eigen::Vector3d pi = st*pend + (1 - st)*pstart;
-			Eigen::MatrixXd traji(4, 4);
+			Matrix3x Ri = Rstart * MatrixExp3(MatrixLog3(Rstart.transpose() * Rend)*st);
+			Vector3x pi = st*pend + (1 - st)*pstart;
+			MatrixXx traji(4, 4);
 			traji << Ri, pi,
 				0, 0, 0, 1;
 			traj.at(i) = traji;
 		}
 		return traj;
 	}
-	std::vector<Eigen::MatrixXd> SimulateControl(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& g,
-		const Eigen::MatrixXd& Ftipmat, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
-		const Eigen::MatrixXd& Slist, const Eigen::MatrixXd& thetamatd, const Eigen::MatrixXd& dthetamatd, const Eigen::MatrixXd& ddthetamatd,
-		const Eigen::VectorXd& gtilde, const std::vector<Eigen::MatrixXd>& Mtildelist, const std::vector<Eigen::MatrixXd>& Gtildelist,
-		double Kp, double Ki, double Kd, double dt, int intRes) {
-		Eigen::MatrixXd FtipmatT = Ftipmat.transpose();
-		Eigen::MatrixXd thetamatdT = thetamatd.transpose();
-		Eigen::MatrixXd dthetamatdT = dthetamatd.transpose();
-		Eigen::MatrixXd ddthetamatdT = ddthetamatd.transpose();
+	std::vector<MatrixXx> SimulateControl(const VectorXx& thetalist, const VectorXx& dthetalist, const VectorXx& g,
+		const MatrixXx& Ftipmat, const std::vector<MatrixXx>& Mlist, const std::vector<MatrixXx>& Glist,
+		const MatrixXx& Slist, const MatrixXx& thetamatd, const MatrixXx& dthetamatd, const MatrixXx& ddthetamatd,
+		const VectorXx& gtilde, const std::vector<MatrixXx>& Mtildelist, const std::vector<MatrixXx>& Gtildelist,
+		numericX Kp, numericX Ki, numericX Kd, numericX dt, int intRes) {
+		MatrixXx FtipmatT = Ftipmat.transpose();
+		MatrixXx thetamatdT = thetamatd.transpose();
+		MatrixXx dthetamatdT = dthetamatd.transpose();
+		MatrixXx ddthetamatdT = ddthetamatd.transpose();
 		int m = thetamatdT.rows(); int n = thetamatdT.cols();
-		Eigen::VectorXd thetacurrent = thetalist;
-		Eigen::VectorXd dthetacurrent = dthetalist;
-		Eigen::VectorXd eint = Eigen::VectorXd::Zero(m);
-		Eigen::MatrixXd taumatT = Eigen::MatrixXd::Zero(m, n);
-		Eigen::MatrixXd thetamatT = Eigen::MatrixXd::Zero(m, n);
-		Eigen::VectorXd taulist;
-		Eigen::VectorXd ddthetalist;
+		VectorXx thetacurrent = thetalist;
+		VectorXx dthetacurrent = dthetalist;
+		VectorXx eint = VectorXx::Zero(m);
+		MatrixXx taumatT = MatrixXx::Zero(m, n);
+		MatrixXx thetamatT = MatrixXx::Zero(m, n);
+		VectorXx taulist;
+		VectorXx ddthetalist;
 		for (int i = 0; i < n; ++i) {
 			taulist = ComputedTorque(thetacurrent, dthetacurrent, eint, gtilde, Mtildelist, Gtildelist, Slist, thetamatdT.col(i),
 				dthetamatdT.col(i), ddthetamatdT.col(i), Kp, Ki, Kd);
@@ -838,7 +838,7 @@ namespace mr {
 			thetamatT.col(i) = thetacurrent;
 			eint += dt * (thetamatdT.col(i) - thetacurrent);
 		}
-		std::vector<Eigen::MatrixXd> ControlTauTraj_ret;
+		std::vector<MatrixXx> ControlTauTraj_ret;
 		ControlTauTraj_ret.push_back(taumatT.transpose());
 		ControlTauTraj_ret.push_back(thetamatT.transpose());
 		return ControlTauTraj_ret;

@@ -98,7 +98,10 @@ target_link_libraries( lib_test ModernRoboticsCpp gtest_main)
 
 endif()
 
-
+option(DOUBLE_PRECISION "use `double` instead of `float`" OFF)
+if(DOUBLE_PRECISION)
+    ADD_DEFINITIONS( -D_DOUBLE_PRECISION=1)
+endif()
 add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
 
 # Install library in your local paths (optional)
